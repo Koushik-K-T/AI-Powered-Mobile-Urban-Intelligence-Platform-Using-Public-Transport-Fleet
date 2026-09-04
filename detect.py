@@ -32,6 +32,12 @@ ROAD_CLASS_MAP = {
     3: "Pothole",              # D40
 }
 
+# Pothole-only model (peterhdd/pothole-detection-yolov8)
+# This model has a single class: {0: '0'} which means "Pothole"
+POTHOLE_CLASS_MAP = {
+    0: "Pothole",
+}
+
 # COCO fallback: remap classes commonly detected in dashcam/road footage
 # to road defect types for demo purposes
 COCO_REMAP = {
@@ -61,13 +67,26 @@ def load_model():
         # Check if it's the road-damage model by inspecting class names
         names = model.names or {}
         if any('D0' in str(v) or 'D1' in str(v) or 'D4' in str(v) for v in names.values()):
+            # Multi-class road damage model (keremberke)
             CLASS_MAP = ROAD_CLASS_MAP
             USING_ROAD_MODEL = True
+        elif len(names) == 1 and names.get(0) in ('0', 'pothole', 'Pothole'):
+            # Pothole-only model (peterhdd)
+            CLASS_MAP = POTHOLE_CLASS_MAP
+            USING_ROAD_MODEL = True
+            print("INFO: Using pothole-only detection model.")
         else:
-            # COCO fallback — remap classes for demo
-            CLASS_MAP = COCO_REMAP
-            USING_ROAD_MODEL = False
-            print("INFO: Using COCO model with road-defect remapping for demo.")
+            # Check if all names are common COCO classes
+            coco_indicators = {'person', 'car', 'bicycle', 'bus', 'truck'}
+            if coco_indicators.intersection(set(str(v).lower() for v in names.values())):
+                CLASS_MAP = COCO_REMAP
+                USING_ROAD_MODEL = False
+                print("INFO: Using COCO model with road-defect remapping for demo.")
+            else:
+                # Unknown model — try pothole map as fallback
+                CLASS_MAP = POTHOLE_CLASS_MAP
+                USING_ROAD_MODEL = True
+                print(f"INFO: Unknown model classes {names}, defaulting to pothole map.")
         return model
     else:
         print("WARNING: road_damage.pt not found. Using yolov8m.pt fallback.")

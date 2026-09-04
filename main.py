@@ -4,6 +4,7 @@ FastAPI application — all routes for the Road Defect Detection System.
 Run: uvicorn main:app --reload
 """
 import asyncio
+import base64
 import json
 import os
 import shutil
@@ -12,9 +13,10 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
+import aiosqlite
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -171,6 +173,22 @@ async def update_issue_status(issue_id: int, body: dict):
         await db.execute("UPDATE issues SET status=? WHERE id=?", (status, issue_id))
         await db.commit()
     return {"status": "updated"}
+
+
+# ── Thumbnail Endpoint ─────────────────────────────────────────────────────────
+
+@app.get("/thumbnail/{det_id}")
+async def get_thumbnail(det_id: int):
+    """Return detection thumbnail as a JPEG image."""
+    async with aiosqlite.connect(database.DB_PATH) as db:
+        cur = await db.execute(
+            "SELECT thumbnail FROM detections WHERE id = ?", (det_id,)
+        )
+        row = await cur.fetchone()
+        if not row or not row[0]:
+            raise HTTPException(status_code=404, detail="Thumbnail not found")
+        image_bytes = base64.b64decode(row[0])
+        return Response(content=image_bytes, media_type="image/jpeg")
 
 
 # ── Frontend (serve index.html) ────────────────────────────────────────────────

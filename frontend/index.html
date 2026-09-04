@@ -6,37 +6,34 @@
 <title>RoadSense — Road Defect Detection System</title>
 <meta name="description" content="AI-powered road defect detection using YOLOv8. Upload videos, monitor live bus feeds, and track road issues across Bengaluru."/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#f0f4f8;--bg2:#ffffff;--card:#ffffff;--border:#e2e8f0;
-  --txt:#0f172a;--txt2:#64748b;--txt3:#94a3b8;
+  --txt:#0f172a;--txt2:#475569;--txt3:#94a3b8;
   --blue:#3B82F6;--orange:#FF6B35;--green:#10B981;--red:#EF4444;--yellow:#F59E0B;--purple:#8B5CF6;
-  --shadow:0 1px 4px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.12);
-  --r:14px;--r2:8px;--font:'Inter',sans-serif;
+  --shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.03);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.10);
+  --r:14px;--r2:8px;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-heading:'Outfit','Inter',system-ui,sans-serif;
   --nav-h:64px;
 }
-@media(prefers-color-scheme:dark){
-  :root{
-    --bg:#0a0f1e;--bg2:#111827;--card:#1a2235;--border:#1e2d45;
-    --txt:#f1f5f9;--txt2:#94a3b8;--txt3:#64748b;
-    --shadow:0 1px 4px rgba(0,0,0,.4);--shadow-lg:0 8px 40px rgba(0,0,0,.6);
-  }
-}
 html{scroll-behavior:smooth}
-body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+body{font-family:var(--font-body);background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
 
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:var(--card);border-bottom:1px solid var(--border);
   display:flex;align-items:center;padding:0 24px;gap:8px;z-index:1000;box-shadow:var(--shadow);}
-.nav-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;color:var(--txt);margin-right:24px;text-decoration:none}
+.nav-logo{display:flex;align-items:center;gap:10px;font-family:var(--font-heading);font-weight:800;font-size:1.15rem;color:var(--txt);margin-right:24px;text-decoration:none}
 .nav-logo span{background:linear-gradient(135deg,var(--orange),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .nav-logo svg{width:28px;height:28px}
 .nav-tabs{display:flex;gap:2px;flex:1}
-.nav-tab{padding:8px 16px;border-radius:var(--r2);border:none;background:none;color:var(--txt2);font-family:var(--font);font-size:.875rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
+.nav-tab{padding:8px 16px;border-radius:var(--r2);border:none;background:none;color:var(--txt2);font-family:var(--font-body);font-size:.875rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
 .nav-tab:hover{background:var(--bg);color:var(--txt)}
 .nav-tab.active{background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(255,107,53,.08));color:var(--blue);font-weight:600}
 .nav-pill{display:flex;align-items:center;gap:6px;margin-left:auto;padding:6px 14px;border-radius:20px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);font-size:.75rem;font-weight:600;color:var(--green)}
@@ -49,18 +46,18 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:var(--car
 
 /* HERO HEADER */
 .page-header{margin-bottom:28px}
-.page-title{font-size:1.75rem;font-weight:800;background:linear-gradient(135deg,var(--txt),var(--txt2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.page-title{font-family:var(--font-heading);font-size:1.75rem;font-weight:800;color:var(--txt)}
 .page-sub{color:var(--txt2);font-size:.9rem;margin-top:4px}
 
 /* CARDS */
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px;box-shadow:var(--shadow)}
-.card-title{font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--txt2);margin-bottom:16px}
+.card-title{font-family:var(--font-heading);font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--txt2);margin-bottom:16px}
 
 /* STATS ROW */
 .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);text-align:center;transition:transform .2s,box-shadow .2s}
 .stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
-.stat-num{font-size:2rem;font-weight:800;line-height:1}
+.stat-num{font-family:var(--font-heading);font-size:2rem;font-weight:800;line-height:1}
 .stat-label{font-size:.75rem;color:var(--txt2);margin-top:6px;font-weight:500}
 .stat-card.blue .stat-num{color:var(--blue)}
 .stat-card.orange .stat-num{color:var(--orange)}
@@ -76,7 +73,7 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:var(--car
 .dropzone{border:2px dashed var(--border);border-radius:var(--r);padding:48px 24px;text-align:center;cursor:pointer;transition:all .25s;background:var(--bg);position:relative}
 .dropzone:hover,.dropzone.drag-over{border-color:var(--blue);background:rgba(59,130,246,.04)}
 .dropzone svg{width:48px;height:48px;color:var(--txt3);margin-bottom:12px}
-.dropzone h3{font-size:1rem;font-weight:600;color:var(--txt)}
+.dropzone h3{font-family:var(--font-heading);font-size:1rem;font-weight:600;color:var(--txt)}
 .dropzone p{font-size:.85rem;color:var(--txt2);margin-top:4px}
 .dropzone input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .file-info{margin-top:16px;padding:12px 16px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:var(--r2);display:flex;align-items:center;gap:10px;font-size:.875rem;font-weight:500;color:var(--blue)}
@@ -90,7 +87,7 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:var(--car
 .processing-stats span{display:flex;align-items:center;gap:4px}
 
 /* BTN */
-.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--r2);font-family:var(--font);font-size:.875rem;font-weight:600;cursor:pointer;transition:all .2s;border:none}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--r2);font-family:var(--font-body);font-size:.875rem;font-weight:600;cursor:pointer;transition:all .2s;border:none}
 .btn-primary{background:linear-gradient(135deg,var(--blue),#2563eb);color:#fff;box-shadow:0 2px 8px rgba(59,130,246,.3)}
 .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(59,130,246,.4)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
@@ -100,7 +97,7 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:var(--car
 /* TABLE */
 .table-wrap{overflow-x:auto;border-radius:var(--r2);border:1px solid var(--border)}
 table{width:100%;border-collapse:collapse;font-size:.85rem}
-thead th{padding:10px 14px;text-align:left;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--txt2);background:var(--bg);border-bottom:1px solid var(--border);white-space:nowrap}
+thead th{padding:10px 14px;text-align:left;font-family:var(--font-heading);font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--txt2);background:var(--bg);border-bottom:1px solid var(--border);white-space:nowrap}
 tbody td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
 tbody tr:last-child td{border-bottom:none}
 tbody tr{transition:background .15s}
@@ -110,27 +107,32 @@ tbody tr:hover{background:var(--bg)}
 
 /* BADGES */
 .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:600;white-space:nowrap}
-.badge-green{background:rgba(16,185,129,.12);color:var(--green);border:1px solid rgba(16,185,129,.2)}
-.badge-red{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.2)}
-.badge-yellow{background:rgba(245,158,11,.12);color:var(--yellow);border:1px solid rgba(245,158,11,.2)}
-.badge-blue{background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.2)}
-.badge-orange{background:rgba(255,107,53,.12);color:var(--orange);border:1px solid rgba(255,107,53,.2)}
-.badge-gray{background:rgba(100,116,139,.12);color:var(--txt2);border:1px solid var(--border)}
-.badge-purple{background:rgba(139,92,246,.12);color:var(--purple);border:1px solid rgba(139,92,246,.2)}
+.badge-green{background:rgba(16,185,129,.12);color:#059669;border:1px solid rgba(16,185,129,.2)}
+.badge-red{background:rgba(239,68,68,.12);color:#dc2626;border:1px solid rgba(239,68,68,.2)}
+.badge-yellow{background:rgba(245,158,11,.12);color:#d97706;border:1px solid rgba(245,158,11,.2)}
+.badge-blue{background:rgba(59,130,246,.12);color:#2563eb;border:1px solid rgba(59,130,246,.2)}
+.badge-orange{background:rgba(255,107,53,.12);color:#ea580c;border:1px solid rgba(255,107,53,.2)}
+.badge-gray{background:rgba(100,116,139,.08);color:var(--txt2);border:1px solid var(--border)}
+.badge-purple{background:rgba(139,92,246,.12);color:#7c3aed;border:1px solid rgba(139,92,246,.2)}
 
 /* THUMBNAIL */
-.thumb{width:52px;height:36px;object-fit:cover;border-radius:4px;border:1px solid var(--border)}
+.thumb{width:52px;height:36px;object-fit:cover;border-radius:4px;border:1px solid var(--border);cursor:pointer;transition:transform .15s}
+.thumb:hover{transform:scale(1.6);z-index:10;position:relative;box-shadow:var(--shadow-lg)}
 
 /* MAP */
 .map-container{border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
 .leaflet-container{background:var(--bg2)}
+/* Popup thumbnail in map */
+.leaflet-popup-content img.popup-thumb{width:200px;height:auto;border-radius:6px;margin-top:6px;border:1px solid var(--border)}
+.leaflet-popup-content{font-family:var(--font-body);font-size:.82rem;line-height:1.5}
+.leaflet-popup-content b{font-family:var(--font-heading)}
 
 /* LIVE FEED */
 .bus-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:24px}
 .bus-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);transition:all .2s;position:relative;overflow:hidden}
 .bus-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue),var(--orange))}
 .bus-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
-.bus-card-name{font-weight:700;font-size:1rem;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.bus-card-name{font-family:var(--font-heading);font-weight:700;font-size:1rem;margin-bottom:8px;display:flex;align-items:center;gap:8px}
 .bus-status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
 .bus-card-detail{font-size:.8rem;color:var(--txt2);line-height:1.7}
 .live-indicator{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:600;color:var(--green);padding:4px 10px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.15);border-radius:20px}
@@ -143,8 +145,12 @@ tbody tr:hover{background:var(--bg)}
 .radio-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-bottom:28px}
 .radio-card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:24px;cursor:pointer;transition:all .25s;position:relative}
 .radio-card.selected{border-color:var(--blue);background:rgba(59,130,246,.04);box-shadow:0 0 0 4px rgba(59,130,246,.08)}
-.radio-card-icon{font-size:2rem;margin-bottom:12px}
-.radio-card-title{font-weight:700;font-size:1rem;margin-bottom:6px}
+.radio-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.radio-card-icon svg{width:22px;height:22px}
+.radio-card-icon.blue{background:rgba(59,130,246,.1);color:var(--blue)}
+.radio-card-icon.green{background:rgba(16,185,129,.1);color:var(--green)}
+.radio-card-icon.purple{background:rgba(139,92,246,.1);color:var(--purple)}
+.radio-card-title{font-family:var(--font-heading);font-weight:700;font-size:1rem;margin-bottom:6px}
 .radio-card-desc{font-size:.82rem;color:var(--txt2);line-height:1.6}
 .radio-card input{position:absolute;opacity:0;pointer-events:none}
 .radio-check{position:absolute;top:16px;right:16px;width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all .2s}
@@ -172,7 +178,7 @@ tbody tr:hover{background:var(--bg)}
 
 /* FILTER BAR */
 .filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-.filter-select{padding:7px 12px;border-radius:var(--r2);border:1px solid var(--border);background:var(--card);color:var(--txt);font-family:var(--font);font-size:.85rem;cursor:pointer}
+.filter-select{padding:7px 12px;border-radius:var(--r2);border:1px solid var(--border);background:var(--card);color:var(--txt);font-family:var(--font-body);font-size:.85rem;cursor:pointer}
 
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:6px;height:6px}
@@ -194,10 +200,10 @@ tbody tr:hover{background:var(--bg)}
     <span>RoadSense</span>
   </a>
   <div class="nav-tabs" id="navTabs">
-    <button class="nav-tab active" data-page="upload" onclick="switchPage('upload')">🎬 Upload &amp; Detect</button>
-    <button class="nav-tab" data-page="live" onclick="switchPage('live')">📡 Live Bus Feed</button>
-    <button class="nav-tab" data-page="issues" onclick="switchPage('issues')">🗺️ Road Issues</button>
-    <button class="nav-tab" data-page="connectivity" onclick="switchPage('connectivity')">🔗 Connectivity</button>
+    <button class="nav-tab active" data-page="upload" onclick="switchPage('upload')">Upload &amp; Detect</button>
+    <button class="nav-tab" data-page="live" onclick="switchPage('live')">Live Bus Feed</button>
+    <button class="nav-tab" data-page="issues" onclick="switchPage('issues')">Road Issues</button>
+    <button class="nav-tab" data-page="connectivity" onclick="switchPage('connectivity')">Connectivity</button>
   </div>
   <div class="nav-pill"><div class="pulse"></div> System Live</div>
 </nav>
@@ -243,17 +249,17 @@ tbody tr:hover{background:var(--bg)}
         <div class="card-title">Processing</div>
         <div class="progress-wrap">
           <div class="progress-label">
-            <span id="progressLabel">Starting…</span>
+            <span id="progressLabel">Starting...</span>
             <span id="progressPct">0%</span>
           </div>
           <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
           <div class="processing-stats">
-            <span>🎞️ Frame <b id="frameCur">0</b> / <b id="frameTotal">?</b></span>
-            <span>🔍 Detections: <b id="detCount">0</b></span>
+            <span>Frame <b id="frameCur">0</b> / <b id="frameTotal">?</b></span>
+            <span>Detections: <b id="detCount">0</b></span>
           </div>
         </div>
-        <div id="doneMsg" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:var(--r2);font-size:.85rem;color:var(--green);font-weight:600">
-          ✅ Analysis complete!
+        <div id="doneMsg" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:var(--r2);font-size:.85rem;color:#059669;font-weight:600">
+          Analysis complete
         </div>
       </div>
 
@@ -266,7 +272,7 @@ tbody tr:hover{background:var(--bg)}
         <div class="table-wrap">
           <table id="detTable">
             <thead><tr>
-              <th>Frame</th><th>Defect</th><th>Confidence</th><th>Lat</th><th>Lng</th><th>Thumb</th>
+              <th>Frame</th><th>Defect</th><th>Confidence</th><th>Lat</th><th>Lng</th><th>Thumbnail</th>
             </tr></thead>
             <tbody id="detTbody">
               <tr><td colspan="6"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>Upload a video to see detections</p></div></td></tr>
@@ -297,8 +303,8 @@ tbody tr:hover{background:var(--bg)}
 
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
     <span class="live-indicator"><div class="pulse"></div> LIVE</span>
-    <span style="font-size:.8rem;color:var(--txt2)">Last updated: <span id="lastPollTime">—</span></span>
-    <button class="btn btn-sm" onclick="fetchLiveFeed()" style="background:var(--bg);border:1px solid var(--border);color:var(--txt2);margin-left:auto">↻ Refresh now</button>
+    <span style="font-size:.8rem;color:var(--txt2)">Last updated: <span id="lastPollTime">--</span></span>
+    <button class="btn btn-sm" onclick="fetchLiveFeed()" style="background:var(--bg);border:1px solid var(--border);color:var(--txt2);margin-left:auto">Refresh now</button>
   </div>
 
   <!-- Bus Cards -->
@@ -359,7 +365,7 @@ tbody tr:hover{background:var(--bg)}
           <option value="Medium">Medium</option>
           <option value="Low">Low</option>
         </select>
-        <button class="btn btn-sm" onclick="fetchIssues()" style="background:var(--bg);border:1px solid var(--border);color:var(--txt2)">↻ Refresh</button>
+        <button class="btn btn-sm" onclick="fetchIssues()" style="background:var(--bg);border:1px solid var(--border);color:var(--txt2)">Refresh</button>
       </div>
       <div class="card">
         <div class="table-wrap">
@@ -389,40 +395,46 @@ tbody tr:hover{background:var(--bg)}
   <div class="radio-cards" id="radioCards">
     <div class="radio-card selected" onclick="selectConn('ais140',this)" id="card-ais140">
       <div class="radio-check" id="check-ais140"><span></span></div>
-      <div class="radio-card-icon">📡</div>
+      <div class="radio-card-icon blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+      </div>
       <div class="radio-card-title">AIS-140 SIM</div>
       <div class="radio-card-desc">AIS-140 compliant vehicle tracking SIM card. Mandatory for commercial vehicles per MoRTH guidelines. Real-time data over cellular network with GPS tracking and emergency alerts.</div>
       <div class="data-flow" style="margin-top:12px">
-        <div class="flow-node">🚌 Bus</div><div class="flow-arrow">→</div>
-        <div class="flow-node">📱 SIM</div><div class="flow-arrow">→</div>
-        <div class="flow-node">🗼 Cell Tower</div><div class="flow-arrow">→</div>
-        <div class="flow-node">🖥️ Backend</div>
+        <div class="flow-node">Bus</div><div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">SIM</div><div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">Cell Tower</div><div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">Backend</div>
       </div>
     </div>
 
     <div class="radio-card" onclick="selectConn('nirbhaya4g',this)" id="card-nirbhaya4g">
       <div class="radio-check" id="check-nirbhaya4g"></div>
-      <div class="radio-card-icon">🔒</div>
+      <div class="radio-card-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
       <div class="radio-card-title">Nirbhaya 4G</div>
       <div class="radio-card-desc">Nirbhaya fund-backed 4G module with encrypted VPN channel. Dual-purpose: women-safety alerts + road condition monitoring. Priority bandwidth allocation on government networks.</div>
       <div class="data-flow" style="margin-top:12px">
-        <div class="flow-node">🚌 Bus</div><div class="flow-arrow">→</div>
-        <div class="flow-node">📶 4G Module</div><div class="flow-arrow">→</div>
-        <div class="flow-node">🔐 VPN</div><div class="flow-arrow">→</div>
-        <div class="flow-node">🖥️ Backend</div>
+        <div class="flow-node">Bus</div><div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">4G Module</div><div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">VPN</div><div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">Backend</div>
       </div>
     </div>
 
     <div class="radio-card" onclick="selectConn('m2m',this)" id="card-m2m">
       <div class="radio-check" id="check-m2m"></div>
-      <div class="radio-card-icon">📶</div>
+      <div class="radio-card-icon purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+      </div>
       <div class="radio-card-title">M2M IoT Depot WiFi</div>
       <div class="radio-card-desc">Machine-to-Machine IoT protocol. Detections stored locally on the bus during the route. Bulk sync over secured depot WiFi when bus returns. Ideal for low-connectivity rural routes.</div>
       <div class="data-flow" style="margin-top:12px">
-        <div class="flow-node">🚌 Bus</div><div class="flow-arrow">→</div>
-        <div class="flow-node">💾 Local Store</div><div class="flow-arrow">→</div>
-        <div class="flow-node">📡 Depot WiFi</div><div class="flow-arrow">→</div>
-        <div class="flow-node">🖥️ Backend</div>
+        <div class="flow-node">Bus</div><div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">Local Store</div><div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">Depot WiFi</div><div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">Backend</div>
       </div>
     </div>
   </div>
@@ -430,7 +442,7 @@ tbody tr:hover{background:var(--bg)}
   <!-- Status Panel -->
   <div class="two-col">
     <div class="status-panel">
-      <div style="font-size:.9rem;font-weight:700;margin-bottom:16px">Simulated Connection Status</div>
+      <div style="font-family:var(--font-heading);font-size:.9rem;font-weight:700;margin-bottom:16px">Simulated Connection Status</div>
       <div id="connStatusContent"></div>
     </div>
     <div class="card">
@@ -439,9 +451,9 @@ tbody tr:hover{background:var(--bg)}
         <table>
           <thead><tr><th>Mode</th><th>Latency</th><th>Offline</th><th>Coverage</th><th>Cost</th></tr></thead>
           <tbody>
-            <tr><td><b>AIS-140 SIM</b></td><td>~1s</td><td>❌</td><td>Urban+</td><td>Medium</td></tr>
-            <tr><td><b>Nirbhaya 4G</b></td><td>~2s</td><td>❌</td><td>Urban</td><td>Low (govt)</td></tr>
-            <tr><td><b>M2M Depot WiFi</b></td><td>Batch</td><td>✅</td><td>All</td><td>Very Low</td></tr>
+            <tr><td><b>AIS-140 SIM</b></td><td>~1s</td><td>No</td><td>Urban+</td><td>Medium</td></tr>
+            <tr><td><b>Nirbhaya 4G</b></td><td>~2s</td><td>No</td><td>Urban</td><td>Low (govt)</td></tr>
+            <tr><td><b>M2M Depot WiFi</b></td><td>Batch</td><td>Yes</td><td>All</td><td>Very Low</td></tr>
           </tbody>
         </table>
       </div>
@@ -476,15 +488,15 @@ const BLAT = 12.9716, BLNG = 77.5946;
 
 function initUploadMap() {
   uploadMap = L.map('uploadMap').setView([BLAT, BLNG], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM'}).addTo(uploadMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OSM'}).addTo(uploadMap);
 }
 function initLiveMap() {
   liveMap = L.map('liveMap').setView([BLAT, BLNG], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM'}).addTo(liveMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OSM'}).addTo(liveMap);
 }
 function initIssuesMap() {
   issuesMap = L.map('issuesMap').setView([BLAT, BLNG], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM'}).addTo(issuesMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OSM'}).addTo(issuesMap);
 }
 
 function defectColor(type) {
@@ -496,11 +508,24 @@ function makeCircleIcon(color) {
   return L.divIcon({ className:'', html:`<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`, iconSize:[14,14], iconAnchor:[7,7] });
 }
 
+// Build popup content with thumbnail image
+function buildPopupContent(det) {
+  let html = `<b>${det.defect_type}</b><br>Confidence: ${Math.round(det.confidence*100)}%`;
+  if (det.frame) html += `<br>Frame: ${det.frame}`;
+  // Show thumbnail if available (base64 or via /thumbnail/{id} endpoint)
+  if (det.thumbnail) {
+    html += `<br><img class="popup-thumb" src="data:image/jpeg;base64,${det.thumbnail}" alt="Detection thumbnail"/>`;
+  } else if (det.id) {
+    html += `<br><img class="popup-thumb" src="${API}/thumbnail/${det.id}" alt="Detection thumbnail" onerror="this.style.display='none'"/>`;
+  }
+  return html;
+}
+
 function addUploadPin(det) {
   if (!uploadMap) return;
   const m = L.marker([det.lat, det.lng], { icon: makeCircleIcon(defectColor(det.defect_type)) })
     .addTo(uploadMap)
-    .bindPopup(`<b>${det.defect_type}</b><br>Confidence: ${Math.round(det.confidence*100)}%<br>Frame: ${det.frame}`);
+    .bindPopup(buildPopupContent(det), {maxWidth: 250});
   uploadMarkers.push(m);
   if (uploadMarkers.length === 1) uploadMap.setView([det.lat, det.lng], 14);
 }
@@ -540,7 +565,7 @@ async function uploadVideo() {
   if (!currentFile) return;
   const btn = document.getElementById('uploadBtn');
   btn.disabled = true;
-  btn.innerHTML = '⏳ Uploading…';
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Uploading...';
 
   const fd = new FormData();
   fd.append('file', currentFile);
@@ -554,11 +579,11 @@ async function uploadVideo() {
   } catch(e) {
     alert('Upload failed: ' + e.message);
     btn.disabled = false;
-    btn.innerHTML = '⬆️ Upload & Analyse';
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Upload &amp; Analyse';
     return;
   }
 
-  btn.innerHTML = '🔍 Processing…';
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Processing...';
   document.getElementById('progressCard').style.display = 'block';
   document.getElementById('doneMsg').style.display = 'none';
   document.getElementById('detTbody').innerHTML = '';
@@ -573,7 +598,7 @@ async function uploadVideo() {
       const pct = data.pct || 0;
       document.getElementById('progressFill').style.width = pct + '%';
       document.getElementById('progressPct').textContent = pct.toFixed(1) + '%';
-      document.getElementById('progressLabel').textContent = `Processing frames…`;
+      document.getElementById('progressLabel').textContent = `Processing frames...`;
       document.getElementById('frameCur').textContent = data.frame || 0;
       document.getElementById('frameTotal').textContent = data.total || '?';
     }
@@ -594,14 +619,14 @@ async function uploadVideo() {
       document.getElementById('progressLabel').textContent = 'Complete';
       document.getElementById('doneMsg').style.display = 'block';
       btn.disabled = false;
-      btn.innerHTML = '✅ Done — Upload another';
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Done — Upload another';
     }
 
     if (data.type === 'error') {
       evtSrc.close();
       alert('Error: ' + data.message);
       btn.disabled = false;
-      btn.innerHTML = '⬆️ Upload & Analyse';
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Upload &amp; Analyse';
     }
   };
 
@@ -609,7 +634,7 @@ async function uploadVideo() {
     evtSrc.close();
     document.getElementById('progressLabel').textContent = 'Stream ended';
     btn.disabled = false;
-    btn.innerHTML = '⬆️ Upload & Analyse';
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Upload &amp; Analyse';
   };
 }
 
@@ -624,8 +649,8 @@ function appendDetectionRow(d) {
   const tr = document.createElement('tr');
   tr.className = 'row-slide-in';
   const thumb = d.thumbnail
-    ? `<img class="thumb" src="data:image/jpeg;base64,${d.thumbnail}" alt=""/>`
-    : '<span style="color:var(--txt3);font-size:.75rem">—</span>';
+    ? `<img class="thumb" src="data:image/jpeg;base64,${d.thumbnail}" alt="Detection"/>`
+    : '<span style="color:var(--txt3);font-size:.75rem">--</span>';
   tr.innerHTML = `
     <td style="font-family:monospace;font-size:.8rem">#${d.frame}</td>
     <td><b>${d.defect_type}</b></td>
@@ -685,9 +710,9 @@ function renderLiveFeed() {
           ${bid}
         </div>
         <div class="bus-card-detail">
-          ${d.defect_type ? `<div>🔍 <b>${d.defect_type}</b> — ${d.confidence ? Math.round(d.confidence*100)+'%' : '—'}</div>` : '<div>✅ No defect</div>'}
-          <div>📍 ${d.lat?.toFixed(4)}, ${d.lng?.toFixed(4)}</div>
-          <div>🕐 ${timeAgo(d.created_at)}</div>
+          ${d.defect_type ? `<div><b>${d.defect_type}</b> — ${d.confidence ? Math.round(d.confidence*100)+'%' : '--'}</div>` : '<div>No defect</div>'}
+          <div>${d.lat?.toFixed(4)}, ${d.lng?.toFixed(4)}</div>
+          <div>${timeAgo(d.created_at)}</div>
         </div>
       </div>`;
 
@@ -716,11 +741,11 @@ function renderLiveFeed() {
     const isNew = !prevFeedIds.has(d.created_at);
     if (isNew) tr.className = 'new-row';
     tr.innerHTML = `
-      <td><b style="color:${BUS_COLORS[d.bus_id]||'var(--blue)'}">${d.bus_id||'—'}</b></td>
-      <td>${d.defect_type||'—'}</td>
-      <td>${d.confidence ? confBadge(d.confidence) : '—'}</td>
-      <td style="font-size:.8rem">${d.lat?.toFixed(4)||'—'}</td>
-      <td style="font-size:.8rem">${d.lng?.toFixed(4)||'—'}</td>
+      <td><b style="color:${BUS_COLORS[d.bus_id]||'var(--blue)'}">${d.bus_id||'--'}</b></td>
+      <td>${d.defect_type||'--'}</td>
+      <td>${d.confidence ? confBadge(d.confidence) : '--'}</td>
+      <td style="font-size:.8rem">${d.lat?.toFixed(4)||'--'}</td>
+      <td style="font-size:.8rem">${d.lng?.toFixed(4)||'--'}</td>
       <td style="font-size:.78rem;color:var(--txt2)">${timeAgo(d.created_at)}</td>`;
     tb.appendChild(tr);
   });
@@ -773,7 +798,7 @@ function renderIssues() {
       <td style="text-align:center"><b>${i.detection_count}</b></td>
       <td><span class="badge ${priClass[i.priority]||'badge-gray'}">${i.priority}</span></td>
       <td><span class="badge ${statusClass[i.status]||'badge-gray'}">${i.status}</span></td>
-      <td>${i.confirmed ? '<span class="badge badge-green">✅ Confirmed</span>' : '<span class="badge badge-yellow">⚠️ Unverified</span>'}</td>
+      <td>${i.confirmed ? '<span class="badge badge-green">Confirmed</span>' : '<span class="badge badge-yellow">Unverified</span>'}</td>
       <td style="font-size:.78rem;color:var(--txt2)">${timeAgo(i.last_seen)}</td>
     </tr>`).join('');
 }
@@ -788,7 +813,7 @@ function renderIssuesPins() {
     const m = L.marker([i.lat, i.lng], {
       icon: L.divIcon({ className:'', html:`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${col};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);opacity:${i.status==='Fixed'?0.4:1}"></div>`, iconSize:[size,size], iconAnchor:[size/2,size/2] })
     }).addTo(issuesMap);
-    m.bindPopup(`<b>${i.defect_type}</b><br>${i.confirmed?'✅ Confirmed':'⚠️ Unverified'}<br>Hits: ${i.detection_count}<br>Priority: ${i.priority}<br>Status: ${i.status}`);
+    m.bindPopup(`<b>${i.defect_type}</b><br>${i.confirmed?'Confirmed':'Unverified'}<br>Hits: ${i.detection_count}<br>Priority: ${i.priority}<br>Status: ${i.status}`);
     issueMarkers.push(m);
   });
 }
@@ -803,7 +828,7 @@ let selectedConn = 'ais140';
 const connModes = {
   ais140: {
     statuses: [
-      { color:'green', label:'Connection', value:'🟢 Live — Connected' },
+      { color:'green', label:'Connection', value:'Live — Connected' },
       { color:'green', label:'Data Mode', value:'Real-time streaming' },
       { color:'green', label:'Latency', value:'~850ms' },
       { color:'green', label:'Signal', value:'4G LTE — 3 bars' },
@@ -812,7 +837,7 @@ const connModes = {
   },
   nirbhaya4g: {
     statuses: [
-      { color:'yellow', label:'Connection', value:'🟡 Store & Forward' },
+      { color:'yellow', label:'Connection', value:'Store & Forward' },
       { color:'yellow', label:'Data Mode', value:'Buffered — 3 packets queued' },
       { color:'yellow', label:'Latency', value:'~2.1s (VPN overhead)' },
       { color:'yellow', label:'Signal', value:'4G — weak signal' },
@@ -821,7 +846,7 @@ const connModes = {
   },
   m2m: {
     statuses: [
-      { color:'blue', label:'Connection', value:'🔵 Syncing via Depot WiFi' },
+      { color:'blue', label:'Connection', value:'Syncing via Depot WiFi' },
       { color:'blue', label:'Data Mode', value:'Batch upload' },
       { color:'blue', label:'Packets Queued', value:'142 detections buffered' },
       { color:'blue', label:'Last Sync', value:'4 mins ago at depot' },
@@ -846,7 +871,6 @@ function selectConn(id, el) {
 function renderConnStatus() {
   const mode = connModes[selectedConn];
   if (!mode) return;
-  const dotColor = { green:'green', yellow:'yellow', blue:'blue' };
   document.getElementById('connStatusContent').innerHTML = mode.statuses.map(s => `
     <div class="status-item">
       <div class="status-dot ${s.color}"></div>
