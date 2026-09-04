@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanPulse — Smart Road Intelligence</title>
+
+```
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<link rel="stylesheet" href="style.css">
+```
+
+</head>
+
+<body>
+
+```
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="brand">
+        <div class="brand-icon">UP</div>
+        <div>
+            <h1>UrbanPulse</h1>
+            <span>Smart Road Intelligence</span>
+        </div>
+    </div>
+
+    <div class="system-status">
+        <span class="status-dot"></span>
+        SYSTEM ONLINE
+    </div>
+
+    <nav>
+        <button class="nav-item active">
+            <span>◉</span> Live Dashboard
+        </button>
+
+        <button class="nav-item">
+            <span>▣</span> AI Detection
+        </button>
+
+        <button class="nav-item">
+            <span>●</span> Bus Fleet
+        </button>
+
+        <button class="nav-item">
+            <span>⚠</span> Road Issues
+        </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+        <div class="mini-card">
+            <span>Detection Engine</span>
+            <strong>YOLOv8</strong>
+        </div>
+
+        <div class="mini-card">
+            <span>GPS Simulation</span>
+            <strong class="green">ACTIVE</strong>
+        </div>
+    </div>
+</aside>
+
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+    <!-- HEADER -->
+    <header class="topbar">
+        <div>
+            <p class="eyebrow">SMART CITY MONITORING</p>
+            <h2>Road Intelligence Dashboard</h2>
+        </div>
+
+        <div class="top-actions">
+            <div class="live-indicator">
+                <span></span> LIVE
+            </div>
+
+            <button id="startBtn" class="primary-btn" onclick="startSimulation()">
+                ▶ Start Simulation
+            </button>
+
+            <button id="resetBtn" class="secondary-btn" onclick="resetSimulation()">
+                ↻ Reset
+            </button>
+        </div>
+    </header>
+
+
+    <!-- STAT CARDS -->
+    <section class="stats">
+
+        <div class="stat-card">
+            <div class="stat-icon blue">🚌</div>
+            <div>
+                <span>Active Buses</span>
+                <strong id="busCount">2</strong>
+                <small>GPS connected</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon orange">⚠</div>
+            <div>
+                <span>Road Issues</span>
+                <strong id="issueCount">0</strong>
+                <small>Detected today</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon red">!</div>
+            <div>
+                <span>High Priority</span>
+                <strong id="highCount">0</strong>
+                <small>Needs attention</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon green">✓</div>
+            <div>
+                <span>AI Accuracy</span>
+                <strong>91%</strong>
+                <small>Pothole model</small>
+            </div>
+        </div>
+
+    </section>
+
+
+    <!-- MAIN GRID -->
+    <section class="dashboard-grid">
+
+        <!-- CAMERA PANEL -->
+        <div class="panel camera-panel">
+
+            <div class="panel-header">
+                <div>
+                    <span class="panel-label">BUS CAMERA</span>
+                    <h3>Live Road Feed</h3>
+                </div>
+
+                <div class="bus-badge">
+                    🚌 BUS 12
+                </div>
+            </div>
+
+            <div class="video-container">
+
+                <video id="roadVideo" controls autoplay muted>
+                     <source src="pothole_detected_browser.mp4" type="video/mp4">
+                     Your browser does not support video playback.
+                </video>
+
+                <div class="video-overlay">
+                    <div class="camera-status">
+                        <span></span> CAMERA ACTIVE
+                    </div>
+
+                    <div id="detectionBox" class="detection-box hidden">
+                        <span class="box-label">
+                            POTHOLE <b id="confidence">91%</b>
+                        </span>
+                    </div>
+
+                    <div class="gps-overlay">
+                        GPS <strong id="gpsText">12.9716, 77.5946</strong>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="detection-info">
+
+                <div class="detection-state">
+                    <span class="pulse"></span>
+                    <div>
+                        <small>AI DETECTION STATUS</small>
+                        <strong id="detectionStatus">Waiting for simulation...</strong>
+                    </div>
+                </div>
+
+                <div class="camera-data">
+                    <div>
+                        <span>Bus ID</span>
+                        <strong>UP-12</strong>
+                    </div>
+
+                    <div>
+                        <span>Speed</span>
+                        <strong id="speed">32 km/h</strong>
+                    </div>
+
+                    <div>
+                        <span>Camera</span>
+                        <strong>Front</strong>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- MAP PANEL -->
+        <div class="panel map-panel">
+
+            <div class="panel-header">
+                <div>
+                    <span class="panel-label">CITY MAP</span>
+                    <h3>Live Road Issues</h3>
+                </div>
+
+                <div class="map-status">
+                    <span></span> GPS LIVE
+                </div>
+            </div>
+
+            <div id="map"></div>
+
+            <div class="map-legend">
+                <div>
+                    <span class="legend-dot bus"></span>
+                    Bus
+                </div>
+
+                <div>
+                    <span class="legend-dot pothole"></span>
+                    Pothole
+                </div>
+
+                <div>
+                    <span class="legend-dot high"></span>
+                    High Priority
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- EVENTS + PRIORITY -->
+    <section class="bottom-grid">
+
+        <div class="panel events-panel">
+
+            <div class="panel-header">
+                <div>
+                    <span class="panel-label">LIVE EVENTS</span>
+                    <h3>Detection Activity</h3>
+                </div>
+
+                <span id="eventCounter">0 events</span>
+            </div>
+
+            <div id="eventList" class="event-list">
+
+                <div class="empty-event">
+                    <div>◌</div>
+                    <p>Start the simulation to see detection events.</p>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="panel priority-panel">
+
+            <div class="panel-header">
+                <div>
+                    <span class="panel-label">ISSUE PRIORITY</span>
+                    <h3>Road Issue #001</h3>
+                </div>
+
+                <span id="priorityBadge" class="priority-badge waiting">
+                    WAITING
+                </span>
+            </div>
+
+            <div class="priority-content">
+
+                <div class="issue-location">
+                    <span>📍</span>
+                    <div>
+                        <small>LOCATION</small>
+                        <strong id="locationText">
+                            Waiting for detection
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="sighting-row">
+                    <span>Bus sightings</span>
+                    <strong id="sightings">0</strong>
+                </div>
+
+                <div class="progress">
+                    <div id="progressBar"></div>
+                </div>
+
+                <p id="priorityMessage">
+                    No road issue detected yet.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <footer>
+        UrbanPulse Prototype • AI-powered road intelligence • Simulation Mode
+    </footer>
+
+</main>
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="script.js"></script>
+```
+
+</body>
+</html>
