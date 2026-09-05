@@ -184,6 +184,43 @@ tbody tr:hover{background:var(--bg)}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* LIGHTBOX */
+.lightbox-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.85);
+  display:flex;align-items:center;justify-content:center;
+  z-index:5000;opacity:0;pointer-events:none;
+  transition:opacity .25s ease;
+  backdrop-filter:blur(4px);
+}
+.lightbox-overlay.active{opacity:1;pointer-events:auto}
+.lightbox-inner{
+  position:relative;max-width:92vw;max-height:90vh;
+}
+.lightbox-inner img{
+  display:block;max-width:92vw;max-height:88vh;
+  border-radius:10px;border:2px solid rgba(255,255,255,.15);
+  box-shadow:0 8px 48px rgba(0,0,0,.6);
+  object-fit:contain;
+}
+.lightbox-close{
+  position:absolute;top:-14px;right:-14px;
+  width:36px;height:36px;
+  background:#fff;border:none;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:0;
+  box-shadow:0 2px 12px rgba(0,0,0,.4);
+  transition:transform .15s;
+  z-index:5001;
+}
+.lightbox-close:hover{transform:scale(1.1)}
+.lightbox-close svg{width:18px;height:18px;stroke:#333;stroke-width:2.5}
+.lightbox-info{
+  margin-top:10px;text-align:center;
+  color:rgba(255,255,255,.7);font-size:.82rem;
+  font-family:var(--font-body);
+}
 </style>
 </head>
 <body>
@@ -461,6 +498,17 @@ tbody tr:hover{background:var(--bg)}
   </div>
 </div>
 
+<!-- LIGHTBOX OVERLAY -->
+<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+  <div class="lightbox-inner" onclick="event.stopPropagation()">
+    <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <img id="lightboxImg" src="" alt="Detection Frame"/>
+    <div class="lightbox-info" id="lightboxInfo"></div>
+  </div>
+</div>
+
 <script>
 const API = 'http://localhost:8000';
 let uploadMap, liveMap, issuesMap;
@@ -644,13 +692,44 @@ function confBadge(c) {
   return `<span class="badge ${cls}">${pct}%</span>`;
 }
 
+// ─── Lightbox ──────────────────────────────────────────────────────────────────
+function openLightbox(imgSrc, infoText) {
+  const overlay = document.getElementById('lightboxOverlay');
+  const img = document.getElementById('lightboxImg');
+  const info = document.getElementById('lightboxInfo');
+  img.src = imgSrc;
+  info.textContent = infoText || '';
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  const overlay = document.getElementById('lightboxOverlay');
+  overlay.classList.remove('active');
+  document.body.style.overflow = '';
+  setTimeout(() => { document.getElementById('lightboxImg').src = ''; }, 300);
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeLightbox();
+});
+
 function appendDetectionRow(d) {
   const tb = document.getElementById('detTbody');
   const tr = document.createElement('tr');
   tr.className = 'row-slide-in';
-  const thumb = d.thumbnail
-    ? `<img class="thumb" src="data:image/jpeg;base64,${d.thumbnail}" alt="Detection"/>`
-    : '<span style="color:var(--txt3);font-size:.75rem">--</span>';
+
+  // Build thumbnail — clickable to open full frame in lightbox
+  let thumb = '<span style="color:var(--txt3);font-size:.75rem">--</span>';
+  if (d.thumbnail) {
+    // Store det ID for frame URL, and info text for lightbox caption
+    const detId = d.id;
+    const infoStr = `${d.defect_type} — ${Math.round(d.confidence*100)}% — Frame #${d.frame}`;
+    // Use full_frame base64 if available, otherwise fetch from /frame/{id} endpoint
+    const fullSrc = d.full_frame
+      ? `data:image/jpeg;base64,${d.full_frame}`
+      : `${API}/frame/${detId}`;
+    thumb = `<img class="thumb" src="data:image/jpeg;base64,${d.thumbnail}" alt="Detection" title="Click to view full frame" onclick="openLightbox('${fullSrc.replace(/'/g, "\\'")}',' ${infoStr.replace(/'/g, "\\'")}')"/>`;
+  }
+
   tr.innerHTML = `
     <td style="font-family:monospace;font-size:.8rem">#${d.frame}</td>
     <td><b>${d.defect_type}</b></td>

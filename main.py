@@ -28,6 +28,8 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 # In-memory job store: {job_id: {status, path, total_frames}}
 jobs: dict = {}
+# Global processing lock — only one video at a time
+current_processing_job: str | None = None
 
 
 @asynccontextmanager
@@ -60,6 +62,12 @@ async def health():
 @app.post("/upload")
 async def upload_video(file: UploadFile = File(...)):
     """Save uploaded video, return job_id for SSE streaming."""
+    global current_processing_job
+    # Reject if another video is already being processed
+    if current_processing_job and current_processing_job in jobs:
+        if jobs[current_processing_job]["status"] == "processing":
+            raise HTTPException(409, "Another video is currently being processed. Please wait.")
+
     job_id = str(uuid.uuid4())
     ext = Path(file.filename).suffix or ".mp4"
     dest = UPLOAD_DIR / f"{job_id}{ext}"
@@ -74,16 +82,26 @@ async def upload_video(file: UploadFile = File(...)):
 @app.get("/stream/{job_id}")
 async def stream_detections(job_id: str):
     """SSE endpoint — streams YOLO processing events for a job."""
+    global current_processing_job
     if job_id not in jobs:
         raise HTTPException(404, "Job not found")
 
     job = jobs[job_id]
     if job["status"] == "done":
         raise HTTPException(400, "Job already completed")
+    if job["status"] == "processing":
+        raise HTTPException(409, "Job is already being processed")
+
+    # Block if another job is still processing
+    if current_processing_job and current_processing_job in jobs:
+        if jobs[current_processing_job]["status"] == "processing":
+            raise HTTPException(409, "Another video is currently being processed")
 
     job["status"] = "processing"
+    current_processing_job = job_id
 
     async def event_generator():
+        global current_processing_job
         try:
             async for event in detect.process_video(job["path"], job_id):
                 yield event
@@ -92,6 +110,7 @@ async def stream_detections(job_id: str):
             pass
         finally:
             job["status"] = "done"
+            current_processing_job = None
 
     return StreamingResponse(
         event_generator(),
@@ -189,6 +208,19 @@ async def get_thumbnail(det_id: int):
             raise HTTPException(status_code=404, detail="Thumbnail not found")
         image_bytes = base64.b64decode(row[0])
         return Response(content=image_bytes, media_type="image/jpeg")
+
+
+# ── Full Frame Endpoint ────────────────────────────────────────────────────────
+
+FRAMES_DIR = Path("uploads/frames")
+
+@app.get("/frame/{det_id}")
+async def get_frame(det_id: int):
+    """Return full detection frame as a JPEG image (with bbox drawn on it)."""
+    frame_path = FRAMES_DIR / f"{det_id}.jpg"
+    if not frame_path.exists():
+        raise HTTPException(status_code=404, detail="Frame not found")
+    return FileResponse(frame_path, media_type="image/jpeg")
 
 
 # ── Frontend (serve index.html) ────────────────────────────────────────────────

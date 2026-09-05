@@ -20,6 +20,8 @@ import io
 import database
 
 MODEL_PATH = Path("models/road_damage.pt")
+FRAMES_DIR = Path("uploads/frames")
+FRAMES_DIR.mkdir(parents=True, exist_ok=True)
 SAMPLE_EVERY = 10          # process every Nth frame
 BENGALURU_LAT = 12.9716
 BENGALURU_LNG = 77.5946
@@ -263,6 +265,14 @@ async def process_video(video_path: str, job_id: str):
                     lng=round(lng, 6),
                     thumbnail=thumbnail,
                 )
+
+                # Save full frame to disk for lightbox display
+                if full_frame:
+                    try:
+                        frame_path = FRAMES_DIR / f"{det_id}.jpg"
+                        frame_path.write_bytes(base64.b64decode(full_frame))
+                    except Exception:
+                        pass
                 await database.cluster_and_fuse(lat, lng, defect_type)
 
                 detection_count += 1
