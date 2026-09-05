@@ -27,8 +27,6 @@
 
 ## Overview
 
-RoadSense is a web application that detects **potholes** from dashcam video uploads and simulated live bus GPS feeds. It uses a YOLO26m model trained on real pothole data to perform object detection, pins detections on an interactive Leaflet map, and clusters nearby detections into confirmed road issues.
-
 ### Key Features
 
 1. **Video Upload & Detect** — Upload an MP4/AVI/MOV video, YOLO26 processes every 10th frame, streams results via SSE (Server-Sent Events)
@@ -109,11 +107,9 @@ web/
 
 ## File-by-File Documentation
 
-### `main.py` — FastAPI Application (231 lines)
+### `main.py` — FastAPI Application
 
-The main HTTP server. All routes are defined here.
-
-**Key routes:**
+**Routes:**
 | Route | Method | Description |
 |---|---|---|
 | `/health` | GET | Returns `{"status": "ok", "timestamp": "..."}` |
@@ -138,11 +134,9 @@ The main HTTP server. All routes are defined here.
 
 ---
 
-### `detect.py` — YOLO26 Inference Engine (282 lines)
+### `detect.py` — YOLO26 Inference Engine
 
-The core detection pipeline. Called by `main.py`'s `/stream/{job_id}` endpoint.
-
-**Key constants:**
+**Constants:**
 ```python
 MODEL_PATH = Path("models/road_damage.pt")
 SAMPLE_EVERY = 10           # Process every 10th frame
@@ -181,9 +175,7 @@ CLASS_MAP = {0: "Pothole"}  # Single class from pothole-yolo26
 
 ---
 
-### `database.py` — SQLite Schema & Clustering (169 lines)
-
-Async SQLite database using `aiosqlite`. Auto-creates tables on startup.
+### `database.py` — SQLite Schema & Clustering
 
 **Tables:**
 
@@ -247,9 +239,9 @@ Async SQLite database using `aiosqlite`. Auto-creates tables on startup.
 
 ---
 
-### `download_model.py` — Model Verification (56 lines)
+### `download_model.py` — Model Verification
 
-**This file NO LONGER downloads anything.** It verifies that `models/road_damage.pt` exists and has the correct classes.
+Verifies `models/road_damage.pt` exists with the correct classes. **Does not download anything.**
 
 ```bash
 python download_model.py
@@ -263,9 +255,7 @@ If the model is missing, it prints setup instructions. **There is NO silent fall
 
 ---
 
-### `simulate_bus.py` — Bus GPS Simulator (109 lines)
-
-Standalone script that simulates 3 buses on Bengaluru routes, POSTing fake detections to `/bus-ping` every 10 seconds.
+### `simulate_bus.py` — Bus GPS Simulator
 
 **Buses:**
 | Bus ID | Starting Route |
@@ -283,17 +273,11 @@ Standalone script that simulates 3 buses on Bengaluru routes, POSTing fake detec
 
 ---
 
-### `frontend/index.html` — Single-File Frontend (968 lines)
+### `frontend/index.html` — Single-File Frontend
 
-A complete single-file web application using:
-- **Preact + htm** (loaded from CDN, no build step needed)
-- **Leaflet.js** for interactive maps
-- **Google Fonts**: Inter (body) + Outfit (headings)
-- **Vanilla CSS** with CSS variables for theming
+Preact + htm, Leaflet.js maps, Google Fonts (Inter + Outfit), Vanilla CSS. No build step — served directly by FastAPI.
 
-**No build step required.** The file is served directly as a static file by FastAPI.
-
-**4 Tabs:**
+**Tabs:**
 
 | Tab | Description |
 |---|---|
@@ -318,27 +302,21 @@ A complete single-file web application using:
 
 ---
 
-### `convert_rdd2022.py` — [OPTIONAL] Dataset Converter (210 lines)
-
-Converts RDD2022 PASCAL VOC dataset to YOLO format for multi-class training. **Not needed for pothole-only detection.**
+### `convert_rdd2022.py` — [OPTIONAL] Dataset Converter
 
 ```bash
 python convert_rdd2022.py --input_dir path/to/RDD2022 --output_dir path/to/output
 ```
-
-Maps: `D00→0 (Longitudinal Crack)`, `D10→1 (Transverse Crack)`, `D20→2 (Alligator Crack)`, `D40→3 (Pothole)`
+Maps: `D00→0`, `D10→1`, `D20→2`, `D40→3 (Pothole)`
 
 ---
 
-### `train_rdd.py` — [OPTIONAL] Fine-Tune Script (44 lines)
-
-Fine-tunes the pothole-yolo26 checkpoint on RDD2022 4-class data. **Not needed for pothole-only detection.**
+### `train_rdd.py` — [OPTIONAL] Fine-Tune Script
 
 ```bash
 python train_rdd.py
 ```
-
-Uses: `epochs=60`, `imgsz=512`, `batch=-1` (AutoBatch), `patience=15`, `device=0`
+`epochs=60`, `imgsz=512`, `batch=-1` (AutoBatch), `patience=15`, `device=0`
 
 ---
 
@@ -378,12 +356,9 @@ huggingface-hub>=0.22.0
 
 ## Setup & Installation
 
-### Prerequisites
-- Python 3.10+ (tested on 3.14)
-- NVIDIA GPU with CUDA support (optional, CPU also works but slower)
-- `pip` package manager
+**Prerequisites:** Python 3.10+, `pip`, NVIDIA GPU (optional — CPU works but slower)
 
-### Step-by-Step
+### Steps
 
 ```bash
 # 1. Clone the repository
@@ -421,8 +396,6 @@ setup.bat   # Windows
 ---
 
 ## Running the Application
-
-You need **two terminals**:
 
 ### Terminal 1 — Backend Server
 ```bash
@@ -573,9 +546,65 @@ Yield SSE "done" event (when video ends)
 
 ---
 
+## Fine-Tuning (Pothole) — Verified Working
+
+Improve pothole detection accuracy by fine-tuning on additional pothole data.
+
+### Dataset: `Ryukijano/Pothole-detection-Yolov8`
+
+| Property | Value |
+|---|---|
+| Source | [HuggingFace](https://huggingface.co/datasets/Ryukijano/Pothole-detection-Yolov8) |
+| License | CC BY 4.0 |
+| Images | 300 (100 train / 100 val / 100 test) |
+| Annotations | YOLO format, single class (`Pothole`) |
+| Location | `datasets/pothole_hf/` (auto-downloaded) |
+
+### 1. Download dataset (already done if you followed setup)
+
+```bash
+python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='Ryukijano/Pothole-detection-Yolov8', repo_type='dataset', local_dir='datasets/pothole_hf')"
+```
+
+### 2. Train
+
+```bash
+python train_pothole.py
+```
+
+**Training settings (verified on RTX 3050, 4GB VRAM):**
+
+| Setting | Value | Reason |
+|---|---|---|
+| Starting weights | `models/road_damage.pt` | pothole-yolo26 checkpoint |
+| `imgsz` | 512 | Matches pre-training resolution |
+| `batch` | 8 | Safe for 4GB VRAM (uses ~2.97G) |
+| `workers` | 0 | **Required on Windows** — DataLoader multiprocessing crashes otherwise |
+| `epochs` | 50 | Fine-tune convergence |
+| `patience` | 10 | Early stop on mAP50 plateau |
+| `lr0` | 0.001 | Lower LR for fine-tuning (not scratch) |
+
+**Expected output:**
+```
+Transferred 768/768 items from pretrained weights   ← all weights reused (same class)
+...
+1 epochs completed in 0.013 hours.
+```
+
+**Time estimate:** ~45 seconds/epoch × 50 epochs ≈ **~40 minutes total** on RTX 3050.
+
+### 3. Deploy
+
+```bash
+copy runs\detect\runs\pothole_finetune\v1\weights\best.pt models\road_damage.pt
+```
+
+Then restart uvicorn — the app automatically uses the new model.
+
+---
+
 ## Optional: Multi-Class Training (RDD2022)
 
-If you want to detect 4 types of road damage (not just potholes), you can fine-tune the model on the RDD2022 dataset.
 
 ### Target classes (after training):
 ```
@@ -673,6 +702,9 @@ The backend enforces a global lock — only one video can be processed at a time
 
 ### 8. `bus.jpg` artifact
 Running YOLO predict with a URL (e.g., `https://ultralytics.com/images/bus.jpg`) downloads the image to CWD. This is an Ultralytics behavior, not a bug. The file has been cleaned up.
+
+### 9. Windows training requires `workers=0`
+Python 3.14 on Windows crashes with `RuntimeError: DataLoader worker exited unexpectedly` if `workers > 0`. Always use `workers=0` in training scripts. This is already set in `train_pothole.py`.
 
 ---
 
