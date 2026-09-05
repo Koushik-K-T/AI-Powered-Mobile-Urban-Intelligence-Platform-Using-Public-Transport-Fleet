@@ -21,10 +21,8 @@ def now_iso() -> str:
 
 
 def defect_priority(defect_type: str) -> str:
-    if defect_type in ("Pothole", "Alligator Crack"):
+    if defect_type == "Pothole":
         return "High"
-    if defect_type == "Transverse Crack":
-        return "Medium"
     return "Low"
 
 

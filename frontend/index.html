@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>RoadSense — Road Defect Detection System</title>
-<meta name="description" content="AI-powered road defect detection using YOLOv8. Upload videos, monitor live bus feeds, and track road issues across Bengaluru."/>
+<meta name="description" content="AI-powered pothole detection using YOLO26. Upload videos, monitor live bus feeds, and track road issues across Bengaluru."/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -249,7 +249,7 @@ tbody tr:hover{background:var(--bg)}
 <div class="page active" id="page-upload">
   <div class="page-header">
     <h1 class="page-title">Upload &amp; Detect</h1>
-    <p class="page-sub">Upload a road video — YOLOv8 processes it in real-time and pins defects on the map</p>
+    <p class="page-sub">Upload a road video — YOLO26 processes it in real-time and pins potholes on the map</p>
   </div>
 
   <div class="two-col">
@@ -386,9 +386,6 @@ tbody tr:hover{background:var(--bg)}
         <select class="filter-select" id="filterType" onchange="renderIssues()">
           <option value="">All Types</option>
           <option value="Pothole">Pothole</option>
-          <option value="Alligator Crack">Alligator Crack</option>
-          <option value="Transverse Crack">Transverse Crack</option>
-          <option value="Longitudinal Crack">Longitudinal Crack</option>
         </select>
         <select class="filter-select" id="filterStatus" onchange="renderIssues()">
           <option value="">All Statuses</option>
@@ -548,7 +545,7 @@ function initIssuesMap() {
 }
 
 function defectColor(type) {
-  const map = { 'Pothole':'#EF4444','Alligator Crack':'#F59E0B','Transverse Crack':'#8B5CF6','Longitudinal Crack':'#3B82F6' };
+  const map = { 'Pothole':'#EF4444' };
   return map[type] || '#64748b';
 }
 

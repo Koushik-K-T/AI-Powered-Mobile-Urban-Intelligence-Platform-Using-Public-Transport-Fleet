@@ -1,7 +1,9 @@
 """
 detect.py
-YOLOv8 video processing — async SSE generator.
+YOLO26 pothole detection — async SSE generator.
 Called by main.py /stream/{job_id} endpoint.
+
+Model: mfranzon/pothole-yolo26 (YOLO26m, single class: Pothole)
 """
 import asyncio
 import base64
@@ -26,75 +28,38 @@ SAMPLE_EVERY = 10          # process every Nth frame
 BENGALURU_LAT = 12.9716
 BENGALURU_LNG = 77.5946
 
-# Road-damage model class IDs (keremberke/yolov8m-road-damage-detection)
-ROAD_CLASS_MAP = {
-    0: "Longitudinal Crack",   # D00
-    1: "Transverse Crack",     # D10
-    2: "Alligator Crack",      # D20
-    3: "Pothole",              # D40
-}
-
-# Pothole-only model (peterhdd/pothole-detection-yolov8)
-# This model has a single class: {0: '0'} which means "Pothole"
-POTHOLE_CLASS_MAP = {
+# Pothole-yolo26 model class mapping (single class)
+CLASS_MAP = {
     0: "Pothole",
 }
 
-# COCO fallback: remap classes commonly detected in dashcam/road footage
-# to road defect types for demo purposes
-COCO_REMAP = {
-    0:  "Pothole",             # person → treat as obstacle
-    1:  "Pothole",             # bicycle
-    2:  "Pothole",             # car
-    3:  "Alligator Crack",     # motorcycle
-    5:  "Transverse Crack",    # bus
-    7:  "Longitudinal Crack",  # truck
-    9:  "Pothole",             # traffic light
-    11: "Transverse Crack",    # stop sign
-    56: "Alligator Crack",     # chair (road furniture)
-    60: "Pothole",             # dining table (large flat object)
-}
-
-# Will be set to road-specific or COCO remap at model load time
-CLASS_MAP = ROAD_CLASS_MAP
-USING_ROAD_MODEL = True
+CONFIDENCE_THRESHOLD = 0.25
 
 
 def load_model():
     """Load YOLO model once (cached at module level)."""
-    global CLASS_MAP, USING_ROAD_MODEL
     from ultralytics import YOLO
-    if MODEL_PATH.exists():
-        model = YOLO(str(MODEL_PATH))
-        # Check if it's the road-damage model by inspecting class names
-        names = model.names or {}
-        if any('D0' in str(v) or 'D1' in str(v) or 'D4' in str(v) for v in names.values()):
-            # Multi-class road damage model (keremberke)
-            CLASS_MAP = ROAD_CLASS_MAP
-            USING_ROAD_MODEL = True
-        elif len(names) == 1 and names.get(0) in ('0', 'pothole', 'Pothole'):
-            # Pothole-only model (peterhdd)
-            CLASS_MAP = POTHOLE_CLASS_MAP
-            USING_ROAD_MODEL = True
-            print("INFO: Using pothole-only detection model.")
-        else:
-            # Check if all names are common COCO classes
-            coco_indicators = {'person', 'car', 'bicycle', 'bus', 'truck'}
-            if coco_indicators.intersection(set(str(v).lower() for v in names.values())):
-                CLASS_MAP = COCO_REMAP
-                USING_ROAD_MODEL = False
-                print("INFO: Using COCO model with road-defect remapping for demo.")
-            else:
-                # Unknown model — try pothole map as fallback
-                CLASS_MAP = POTHOLE_CLASS_MAP
-                USING_ROAD_MODEL = True
-                print(f"INFO: Unknown model classes {names}, defaulting to pothole map.")
-        return model
-    else:
-        print("WARNING: road_damage.pt not found. Using yolov8m.pt fallback.")
-        CLASS_MAP = COCO_REMAP
-        USING_ROAD_MODEL = False
-        return YOLO("yolov8m.pt")
+
+    if not MODEL_PATH.exists():
+        raise FileNotFoundError(
+            f"Model not found at {MODEL_PATH}. "
+            "Run 'python download_model.py' for setup instructions."
+        )
+
+    model = YOLO(str(MODEL_PATH))
+
+    # Verify it's a valid pothole model
+    names = model.names or {}
+    name_values = {str(v).lower() for v in names.values()}
+    if "pothole" not in name_values and "0" not in name_values:
+        raise ValueError(
+            f"Model at {MODEL_PATH} has unexpected classes: {names}. "
+            "Expected a pothole detection model."
+        )
+
+    print(f"INFO: Loaded pothole-yolo26 model from {MODEL_PATH}")
+    print(f"      Classes: {names}")
+    return model
 
 
 _model = None
@@ -233,7 +198,9 @@ async def process_video(video_path: str, job_id: str):
         # Run YOLO in thread pool (blocking call)
         frame_copy = frame.copy()
         results = await loop.run_in_executor(
-            None, lambda f=frame_copy: model.predict(f, conf=0.4, verbose=False)
+            None, lambda f=frame_copy: model.predict(
+                f, conf=CONFIDENCE_THRESHOLD, verbose=False
+            )
         )
 
         found_any = False
@@ -247,10 +214,10 @@ async def process_video(video_path: str, job_id: str):
                 conf = float(box.conf[0])
                 xyxy = box.xyxy[0].tolist()
 
-                # Skip classes not in our map (for COCO model, ignore irrelevant classes)
+                # Only process classes in our map
                 if cls_id not in CLASS_MAP:
                     continue
-                defect_type = CLASS_MAP.get(cls_id, f"Class_{cls_id}")
+                defect_type = CLASS_MAP[cls_id]
                 thumbnail = frame_to_base64(frame, xyxy)
                 full_frame = full_frame_to_base64(frame, xyxy)
 
